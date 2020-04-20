@@ -20,16 +20,16 @@ function vis1(data, div) {
     .attr("dominant-baseline", "hanging")
     .attr("font-family", "sans-serif")
     .attr("font-size", "16px")
-    .text("Game Scores");
-
+    .text("Donation VS Receiving");
+ 
   // create scales
 
   const x = d3.scaleLinear()
-    .domain([0, d3.max(data, d => d.score)]).nice()
+    .domain([d3.min(data, d => d.amount)]).nice(), d3.max(data, d => d.amount)]).nice()
     .range([0, visWidth]);
 
-  const sortedNames = data.sort((a, b) => d3.descending(a.score, b.score))
-      .map(d => d.name);
+  const sortedNames = data.sort((a, b) => d3.descending(a.amount, b.amount))
+      .map(d => d.donate);
 
   const y = d3.scaleBand()
     .domain(sortedNames)
@@ -49,7 +49,7 @@ function vis1(data, div) {
     .attr("y", 40)
     .attr("fill", "black")
     .attr("text-anchor", "middle")
-    .text("Score");
+    .text("Amount");
 
   const yAxis = d3.axisLeft(y);
 
@@ -63,8 +63,8 @@ function vis1(data, div) {
     .data(data)
     .join("rect")
     .attr("x", d => 0)
-    .attr("y", d => y(d.name))
-    .attr("width", d => x(d.score))
+    .attr("y", d => y(d.donate))
+    .attr("width", d => x(d.amount))
     .attr("height", d => y.bandwidth())
-    .attr("fill", "steelblue");
+    .attr("fill", "grey");
 }

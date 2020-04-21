@@ -1,8 +1,8 @@
-function vis2(geoJSON, div) {
+function vis2(geoJSON, div, data) {
   const margin = {top: 20, right: 20, bottom: 20, left: 20};
 
-  const visWidth = 700 - margin.left - margin.right;
-  const visHeight = 400 - margin.top - margin.bottom;
+  const visWidth = 1000 - margin.left - margin.right;
+  const visHeight = 1000 - margin.top - margin.bottom;
 
   const svg = div.append('svg')
       .attr('width', visWidth + margin.left + margin.right)
@@ -31,32 +31,53 @@ function vis2(geoJSON, div) {
     .attr('d', path)
     .attr('stroke', '#dcdcdc')
     .attr('fill', 'none');
-}
 
-d3.csv("data/result.csv", function(error, data) {
-  if (error) throw error;
-  console.log(data);
 
-const donateToGeo = Object.fromEntries(new Map(result.map(d => [d.Country, d.Net])))
+
+
+//countryToGeo = Object.fromEntries(new Map(data.map(d => [d.Country, d.Net])))
+countryToGeo = geoJSON.features.reduce((result, d) => {
+  result[d.properties.NAME] = d;
+  return result;
+}, {})
+
+let countryAidData = data.map(d => d.Country)
+let geoAidData = geoJSON.features.map(d => d.properties.NAME)
+countryAidData.forEach(d => {
+  if (!geoAidData.includes(d)){
+    console.log(d)
+  }
+})
+//console.log (countryAidData)
 
 //create scale
-const maxRadius = 10;
+const maxRadius = 30;
 
 const radius = d3.scaleSqrt()
-    .domain([0, d3.max(data, d => d.Net)])
+    .domain([0, d3.max(data, d => Math.abs(d.Net))])
     .range([0, maxRadius]);
 // draw circles
 g.selectAll(".dot")
+.data(data)
 .join("circle")
   .attr("class", "dot")
-  .attr("fill", "steelblue")
+  .attr("fill", 
+  d => { if (d.Net>=0)
+    {return "rgba(52,46,173, 0.7)";
+  }
+  else {
+    return "rgba(234,98,39, 0.7)"}
+  })
   .attr("cx", d => {
   
-    const [x, y] = path.centroid(donateToGeo[d.Country]);
+    const [x, y] = path.centroid(countryToGeo[d.Country]);
     return x;
   })
   .attr("cy", d => {
-    const [x, y] = path.centroid(donateToGeo[d.Country]);
+    const [x, y] = path.centroid(countryToGeo[d.Country]);
     return y;
   })
-  .attr("r", d => radius(d.Net)
+  .attr("r", d => radius(Math.abs(d.Net)))
+
+  
+}

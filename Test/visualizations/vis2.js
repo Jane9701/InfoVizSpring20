@@ -1,8 +1,8 @@
 function vis2(geoJSON, div) {
   const margin = {top: 20, right: 20, bottom: 20, left: 20};
 
-  const visWidth = 700 - margin.left - margin.right;
-  const visHeight = 400 - margin.top - margin.bottom;
+  const visWidth = 1000 - margin.left - margin.right;
+  const visHeight = 1000 - margin.top - margin.bottom;
 
   const svg = div.append('svg')
       .attr('width', visWidth + margin.left + margin.right)

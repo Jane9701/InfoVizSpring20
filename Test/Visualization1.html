@@ -10,10 +10,13 @@
 </head>
 
     <body>
+  
         <div id="container">
             <p>Name: Jiayin Zhang </p>
             <p>Netid: jz4021</p>
             <p>Mini-project 1 # Visualization 1 </p>
+
+            <h2>Visualization 1: Donation VS Receiving (Sorted by net value)</h2>
            
             <div>
                 <svg id="legend1" height=100 width=450></svg>
@@ -33,7 +36,7 @@
               }
               
               .bar2 {
-                fill: gray;
+                fill: orange;
                 opacity: 0.5;
               }
             
@@ -85,6 +88,7 @@
                   .attr("transform", "translate(0," + height + ")")
                   .call(d3.axisBottom(x));
 
+
                   /*const xAxis = d3.axisBottom(x);
 
 g.append("g")
@@ -96,6 +100,7 @@ g.append("g")
               g.append("g")
                   .attr("class", "axis y_axis")
                   .call(d3.axisLeft(y));
+               
             
               g.selectAll(".bar")
                 .data(data)
@@ -103,7 +108,7 @@ g.append("g")
                   .attr("class", "bar1")
                   .attr("x", 0)
                   .attr("y", function(d) { return y(d.Country) + 10; })
-                  .attr("width", function(d) { return x(d.Donate1/1000); })
+                  .attr("width", function(d) { return x(d.Donate1/10); })
                   .attr("height", y.bandwidth() - 20);
                   
               g.selectAll(".bar2")
@@ -112,7 +117,7 @@ g.append("g")
                   .attr("class", "bar2")
                   .attr("x", 0)
                   .attr("y", function(d) { return y(d.Country); })
-                  .attr("width", function(d) { return x(d.Receive1/1000); })
+                  .attr("width", function(d) { return x(d.Receive1/10); })
                   .attr("height", y.bandwidth());
             });
               </script>

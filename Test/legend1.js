@@ -4,7 +4,7 @@
 var SVG = d3.select("#legend1")
 
 // create a list of keys
-var keys = ["Donate", "Receive"]
+var keys = ["Donate (USD Million)", "Receive(USD Million)"]
 
 // Usually you have a color scale in your chart already
 /*var color = d3.scaleOrdinal()
@@ -13,7 +13,7 @@ var keys = ["Donate", "Receive"]
  // var color = ["grey", "steelblue"]*/
  var color = d3.scaleOrdinal()
  .domain(keys)
- .range(["steelblue","grey"]);
+ .range(["steelblue","orange"]);
 
 // Add one dot in the legend for each name.
 var size = 20

@@ -2,6 +2,7 @@
 
 Promise.all([
   d3.csv('data/scores.csv', d3.autoType),
+  d3.csv('data/result.csv', d3.autoType),
   d3.json('data/countries.json'),
 ]).then(([data, geoJSON]) => {
   vis1(data, d3.select('#vis1'));

@@ -32,3 +32,31 @@ function vis2(geoJSON, div) {
     .attr('stroke', '#dcdcdc')
     .attr('fill', 'none');
 }
+
+d3.csv("data/result.csv", function(error, data) {
+  if (error) throw error;
+  console.log(data);
+
+const donateToGeo = Object.fromEntries(new Map(result.map(d => [d.Country, d.Net])))
+
+//create scale
+const maxRadius = 10;
+
+const radius = d3.scaleSqrt()
+    .domain([0, d3.max(data, d => d.Net)])
+    .range([0, maxRadius]);
+// draw circles
+g.selectAll(".dot")
+.join("circle")
+  .attr("class", "dot")
+  .attr("fill", "steelblue")
+  .attr("cx", d => {
+  
+    const [x, y] = path.centroid(donateToGeo[d.Country]);
+    return x;
+  })
+  .attr("cy", d => {
+    const [x, y] = path.centroid(donateToGeo[d.Country]);
+    return y;
+  })
+  .attr("r", d => radius(d.Net)

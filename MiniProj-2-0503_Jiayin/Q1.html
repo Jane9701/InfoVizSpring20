@@ -1,0 +1,142 @@
+
+<!DOCTYPE html>
+<title>Q1</title>
+<head>
+<meta charset="utf-8">
+
+
+<!-- Load d3.js -->
+<script src="https://d3js.org/d3.v4.js"></script>
+<script src=legend2.js defer></script>
+</head>
+<h2>Country Role Change Over Time</h2>
+  <div>
+    <svg id="legend2" height=80 width=450></svg>
+  </div>
+
+<div id="countryNetTemp"></div>
+
+
+<script>
+
+    // set the dimensions and margins of the graph
+    var margin = {top: 30, right: 0, bottom: 30, left: 50},
+        width = 210 - margin.left - margin.right,
+        height = 100 - margin.top - margin.bottom;
+    
+    //Read the data
+    d3.csv("data/result_rank.csv", function(data) {
+    
+      // group the data: I want to draw one line per group
+      var sumstat = d3.nest() // nest function allows to group the calculation per level of a factor
+        .key(function(d) { return d.country;})
+        .entries(data);
+
+        console.log(sumstat)
+    
+      // What is the list of groups?
+      allKeys = sumstat.map(function(d){return d.key})
+    
+
+      // Add an svg element for each group. The will be one beside each other and will go on the next row when no more room available
+      var svg = d3.select("#countryNetTemp")
+        .selectAll("uniqueChart")
+        .data(sumstat)
+        .enter()
+        .append("svg")
+          .attr("width", width + margin.left + margin.right)
+          .attr("height", height + margin.top + margin.bottom)
+        .append("g")
+          .attr("transform",
+                "translate(" + margin.left + "," + margin.top + ")");
+    
+      // Add X axis
+      var x = d3.scaleLinear()
+        .domain(d3.extent(data, function(d) { return d.year; }))
+        .range([ 0, width ]);
+      svg
+        .append("g")
+        .attr("transform", "translate(0," + height + ")")
+        .call(d3.axisBottom(x).ticks(3));
+    
+    
+   
+        
+    var yScale = new Map(sumstat.map(function(d){
+
+        var [min,max]= d3.extent(d.values, function(d) { return +d.n; })
+        var domainMin = Math.min(min,0)
+        var domainMax = Math.max(max,0)
+
+        var y = d3.scaleLinear()
+        .domain([domainMin,domainMax])
+        .range([ height, 0 ]);
+
+        return [d.key,y]
+    }))
+
+    svg.each(function(d){
+      var y = yScale.get(d.key)
+      var yAxis = d3.axisLeft(y).ticks(2)
+        .tickFormat(d3.format(".0s"));
+
+      d3.select (this).append("g").call(yAxis)
+    })
+      
+      /*svg.append("g")
+        .call(d3.axisLeft(y).ticks(5)
+        .tickFormat(d3.format(".0s")));*/
+      
+    
+      // color palette
+     /* var color = d3.scaleOrdinal()
+        .domain(allKeys)
+        .range(['#377eb8'])*/
+    
+        // Draw the line
+        svg
+          .append("path")
+            .attr("fill", "#4e79a6" )
+            .attr("stroke", "none")
+            .attr("d", function(d){
+              return d3.area()
+              .x(function(d) { return x(d.year) })
+              .y0(function(d) { return yScale.get(d.country)(0)})
+              .y1(function(d) { return yScale.get(d.country)(
+                +d.n >0 ? +d.n : 0
+                  ) })
+                (d.values.sort((a,b)=>d3.ascending(a.year,b.year)))
+            })
+
+            svg
+          .append("path")
+            .attr("fill", "#F28E2B" )
+            .attr("stroke", "none")
+            .attr("d", function(d){
+              return d3.area()
+              .x(function(d) { return x(d.year) })
+              .y0(function(d) { return yScale.get(d.country)(0)})
+              .y1(function(d) { return yScale.get(d.country)(
+                +d.n <0 ? +d.n : 0
+              ) })
+                (d.values.sort((a,b)=>d3.ascending(a.year,b.year)))
+                
+            })
+
+
+       
+       
+
+    
+      // Add country name
+      svg
+        .append("text")
+        .attr("text-anchor", "start")
+        .attr("y", -5)
+        .attr("x", 0)
+        .text(function(d){ return(d.key)})
+        .style("fill", "black" )
+    
+    })
+
+    </script>

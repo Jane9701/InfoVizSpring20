@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+<title>Q2</title>
+<!-- Load d3.js -->
+<head>
+<script src="https://d3js.org/d3.v4.js"></script>
+<script src="https://d3js.org/d3-color.v1.min.js"></script>
+<script src="https://d3js.org/d3-interpolate.v1.min.js"></script>
+<script src="https://d3js.org/d3-scale-chromatic.v1.min.js"></script>
+
+<script src="legend.js" defer></script>
+
+</head>
+<body>
+<!-- Create a div where the graph will take place -->
+<h1>Top 5 Purposes Relationship</h1>
+
+<div id=viz1>
+<h2>Highlight by Donors(Sorted by total amount)</h2>
+<div id="my_dataviz"></div>
+</div>
+
+<div>
+  <svg id="legend1" height=600 width=300></svg>
+</div>
+
+
+<div id=viz2>
+<h2>Highlight by Receipents(Sorted by total amount)</h2>
+<div id="my_dataviz2"></div>
+</div>
+<div>
+  <svg id="legend2" height=600 width=300></svg>
+</div>
+<div id=instructions>
+  Hover on one of the donors on the left to see five purposes distribution 
+</div>
+<div id=instructions>
+  Hover on one of the recepients on the right to see five purposes distribution 
+</div>
+
+
+</body>
+
+<!-- A bit of style -->
+<style>
+  #instructions{
+    float: left;
+  width: 50%;
+  }
+ #legend1,#legend2{
+  float: left;
+  width: 10%;
+ } 
+ #viz1, #viz2 {
+  float: left;
+  width: 40%;
+}
+.axis {
+  opacity: 0.6;
+}
+.axis:hover {
+  opacity: 1;
+}
+</style>
+<script>
+
+    // set the dimensions and margins of the graph
+    var margin = {top: 30, right: 50, bottom: 10, left: 50},
+      width = 800 - margin.left - margin.right,
+      height = 600 - margin.top - margin.bottom;
+    
+    // append the svg object to the body of the page
+    var svg = d3.select("#my_dataviz")
+    .append("svg")
+      .attr("width", width + margin.left + margin.right)
+      .attr("height", height + margin.top + margin.bottom)
+    .append("g")
+      .attr("transform",
+            "translate(" + margin.left + "," + margin.top + ")");
+    
+    // Parse the Data
+    d3.csv("data4.csv", function(data) {
+    
+      // Color scale: give me a specie name, I return a color
+      var color = d3.scaleOrdinal()
+        .domain(["United States","Japan", "Germany","United Kingdom","France","Netherlands","Canada","Sweden","Norway","Italy","Denmark","Switzerland","Australia","Belgium","Spain","Saudi Arabia","Kuwait","Korea","Austria", "Finland"])
+        .range(["#1F77B4","#AEC7E8","#FF7F0F","#FFBB78","#2CA02C","#98DF8A","#D62728","#FF9896","#9467BD","#C5B0D5","#8C564B","#C49C94","#E377C2","#F7B6D2","#7F7F7F","#C7C7C7","#BCBD21","#DBDB8D","#18BECF","#9EDAE5"])
+    
+      // Here I set the list of dimension manually to control the order of axis:
+      dimensions = ["Donor","Transport(%)","Energy(%)","Agriculture(%)","Industry(%)","Debt(%)","Recipient"]
+     // dimensions = d3.keys(data[0]).filter(function(d) { return d != "Country"})
+    
+  
+
+      // For each dimension, I build a linear scale. I store all in a y object
+      var y = {}
+      for (i in dimensions) {
+        name = dimensions[i]
+        y[name] = d3.scaleLinear()
+        .domain( d3.extent(data, function(d) { return +d[name]; }) ) // --> Same axis range for each group
+          // --> different axis range for each group --> .domain( [d3.extent(data, function(d) { return +d[name]; })] )
+          .range([height, 0])
+      }
+    
+      // Build the X scale -> it find the best position for each Y axis
+      x = d3.scalePoint()
+        .range([0, width])
+        .domain(dimensions);
+    
+      // Highlight the specie that is hovered
+      var highlight = function(d){
+    
+        selected_specie = d.Country
+    
+        // first every group turns grey
+        d3.selectAll(".line")
+          .transition().duration(200)
+          .style("stroke", "lightgrey")
+          .style("opacity", "0.2")
+        // Second the hovered specie takes its color
+        d3.selectAll("." + selected_specie)
+          .transition().duration(200)
+          .style("stroke", color(selected_specie))
+          .style("opacity", "1")
+      }
+    
+      // Unhighlight
+      var doNotHighlight = function(d){
+        d3.selectAll(".line")
+          .transition().duration(200).delay(1000)
+          .style("stroke", function(d){ return( color(d.Country))} )
+          .style("opacity", "1")
+      }
+    
+      // The path function take a row of the csv as input, and return x and y coordinates of the line to draw for this raw.
+      function path(d) {
+          return d3.line()(dimensions.map(function(p) { return [x(p), y[p](d[p])]; }));
+      }
+    
+      // Draw the lines
+      svg
+        .selectAll("myPath")
+        .data(data)
+        .enter()
+        .append("path")
+          .attr("class", function (d) { return "line " + d.Country } ) // 2 class for each line: 'line' and the group name
+          .attr("d",  path)
+          .style("fill", "none" )
+          .style("stroke", function(d){ return( color(d.Country))} )
+          .style("opacity", 0.5)
+          .on("mouseover", highlight)
+          .on("mouseleave", doNotHighlight )
+    
+      // Draw the axis:
+      svg.selectAll("myAxis")
+        // For each dimension of the dataset I add a 'g' element:
+        .data(dimensions).enter()
+        .append("g")
+        .attr("class", "axis")
+        // I translate this element to its right position on the x axis
+        .attr("transform", function(d) { return "translate(" + x(d) + ")"; })
+        // And I build the axis with the call function
+        .each(function(d) { d3.select(this).call(d3.axisLeft().ticks(20).scale(y[d])); })
+        // Add axis title
+        .append("text")
+          .style("text-anchor", "middle")
+          .attr("y", -9)
+          .text(function(d) { return d; })
+          .style("fill", "black")
+    
+    })
+    
+    
+    </script>
+    <script>
+
+      // set the dimensions and margins of the graph
+      var margin2 = {top: 30, right: 50, bottom: 10, left: 50},
+        width2 = 800 - margin.left - margin.right,
+        height2 = 600 - margin.top - margin.bottom;
+      
+      // append the svg object to the body of the page
+      var svg2 = d3.select("#my_dataviz2")
+      .append("svg")
+        .attr("width", width2 + margin2.left + margin2.right)
+        .attr("height", height2 + margin2.top + margin2.bottom)
+      .append("g")
+        .attr("transform",
+              "translate(" + margin2.left + "," + margin2.top + ")");
+      
+      
+  
+              d3.csv("data5.csv", function(data) {
+    
+    // Color scale: give me a specie name, I return a color
+    var color2 = d3.scaleOrdinal()
+      .domain(["India","Thailand","Brazil","Colombia","Korea","Poland","South Africa","Kuwait","Chile","Saudi Arabia"])
+      .range(["#E41A1B","#377EB8","#4DAF49","#984EA3","#FF7F00","#FEFF34","#A65628","#F781BF","#999999","#65C2A5"])    
+dimensions2 = ["Donor","Transport(%)","Energy(%)","Agriculture(%)","Industry(%)","Debt(%)","Recipient"]
+  
+        // For each dimension, I build a linear scale. I store all in a y object
+        var y2 = {}
+        for (i in dimensions2) {
+          name2 = dimensions2[i]
+          y2[name2] = d3.scaleLinear()
+          .domain( d3.extent(data, function(d) { return +d[name2]; }) ) // --> Same axis range for each group
+            // --> different axis range for each group --> .domain( [d3.extent(data, function(d) { return +d[name]; })] )
+            .range([height2, 0])
+        }
+      
+        // Build the X scale -> it find the best position for each Y axis
+        x2 = d3.scalePoint()
+          .range([0, width2])
+          .domain(dimensions2);
+      
+        // Highlight the specie that is hovered
+        var highlight2 = function(d){
+      
+          selected_specie2 = d.RecCountry
+      
+          // first every group turns grey
+          d3.selectAll(".line")
+            .transition().duration(200)
+            .style("stroke", "lightgrey")
+            .style("opacity", "0.2")
+          // Second the hovered specie takes its color
+          d3.selectAll("." + selected_specie2)
+            .transition().duration(200)
+            .style("stroke", color2(selected_specie2))
+            .style("opacity", "1")
+        }
+      
+        // Unhighlight
+        var doNotHighlight2 = function(d){
+          d3.selectAll(".line")
+            .transition().duration(200).delay(1000)
+            .style("stroke", function(d){ return( color2(d.RecCountry))} )
+            .style("opacity", "1")
+        }
+      
+        // The path function take a row of the csv as input, and return x and y coordinates of the line to draw for this raw.
+        function path(d) {
+            return d3.line()(dimensions2.map(function(p) { return [x2(p), y2[p](d[p])]; }));
+        }
+      
+        // Draw the lines
+        svg2
+          .selectAll("myPath2")
+          .data(data)
+          .enter()
+          .append("path")
+            .attr("class", function (d) { return "line " + d.RecCountry } ) // 2 class for each line: 'line' and the group name
+            .attr("d",  path)
+            .style("fill", "none" )
+            .style("stroke", function(d){ return( color2(d.RecCountry))} )
+            .style("opacity", 0.5)
+            .on("mouseover", highlight2)
+            .on("mouseleave", doNotHighlight2 )
+      
+        // Draw the axis:
+        svg2.selectAll("myAxis2")
+          // For each dimension of the dataset I add a 'g' element:
+          .data(dimensions2).enter()
+          .append("g")
+          .attr("class", "axis")
+          // I translate this element to its right position on the x axis
+          .attr("transform", function(d) { return "translate(" + x2(d) + ")"; })
+          // And I build the axis with the call function
+          .each(function(d) { d3.select(this).call(d3.axisLeft().ticks(20).scale(y2[d])); })
+          // Add axis title
+          .append("text")
+            .style("text-anchor", "middle")
+            .attr("y", -9)
+            .text(function(d) { return d; })
+            .style("fill", "black")
+      
+  
+          }) 
+      
+      </script>
